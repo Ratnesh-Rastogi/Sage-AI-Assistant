@@ -1,0 +1,61 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: sage-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sage_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sage_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sage_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sage_user} -d ${POSTGRES_DB:-sage_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    container_name: sage-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-sage_user}:${POSTGRES_PASSWORD:-sage_password}@postgres:5432/${POSTGRES_DB:-sage_db}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./backend/logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: sage-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+  # Optional. Not required for Version 1 (SAGE_BLUEPRINT.md Section 250).
+  redis:
+    image: redis:7-alpine
+    container_name: sage-redis
+    restart: unless-stopped
+    profiles: ["with-redis"]
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

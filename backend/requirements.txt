@@ -1,0 +1,28 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# --- Configuration ---
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# --- Database ---
+sqlalchemy==2.0.36
+alembic==1.14.0
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+
+# --- Scheduler (wired in Phase 3/4) ---
+apscheduler==3.11.0
+
+# --- HTTP / websockets ---
+httpx==0.28.1
+websockets==14.1
+
+# --- Testing ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+
+# --- Dev tooling ---
+python-dotenv==1.0.1
