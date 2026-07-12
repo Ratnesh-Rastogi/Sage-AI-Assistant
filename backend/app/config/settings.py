@@ -18,7 +18,14 @@ class Settings(BaseSettings):
     """Central application settings, sourced from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        # Checks both locations because env_file paths are resolved relative
+        # to the process's current working directory: ".env" covers running
+        # `uvicorn` from the repo root, "../.env" covers running it from
+        # backend/ (as this README's non-Docker instructions do). Missing
+        # files are silently skipped, and real environment variables (e.g.
+        # those Docker Compose injects via `env_file:`) always take priority
+        # over both.
+        env_file=(".env", "../.env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",

@@ -34,7 +34,6 @@ engine: AsyncEngine = _build_engine()
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
-    class_=None,  # uses AsyncSession by default via async_sessionmaker
     expire_on_commit=False,
 )
 

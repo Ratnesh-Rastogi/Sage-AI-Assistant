@@ -1,0 +1,29 @@
+.git
+.gitignore
+docs/
+README.md
+LICENSE
+
+# Python
+**/__pycache__/
+**/*.pyc
+.venv/
+venv/
+.pytest_cache/
+backend/logs/
+
+# Node
+**/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Local data
+storage/files/*
+!storage/files/.gitkeep
+database/backups/*
+!database/backups/.gitkeep

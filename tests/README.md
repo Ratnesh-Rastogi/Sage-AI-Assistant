@@ -33,5 +33,5 @@ cd backend && pytest ../tests/integration
 
 # End-to-end tests (needs the full stack running)
 docker compose up -d
-npx playwright test tests/e2e
+cd frontend && npm run test:e2e
 ```

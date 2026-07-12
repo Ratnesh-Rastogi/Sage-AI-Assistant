@@ -5,7 +5,7 @@
  * checks that the app shell loads. Full user-flow E2E tests (chat, memory,
  * tasks, reminders) are added as those features are built in later phases.
  *
- * Run with: npx playwright test tests/e2e
+ * Run with: cd frontend && npm run test:e2e
  * (requires the full docker-compose stack running).
  */
 import { expect, test } from "@playwright/test";

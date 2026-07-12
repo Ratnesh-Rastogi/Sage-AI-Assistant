@@ -1,0 +1,16 @@
+2026-07-12 17:07:29 | INFO     | app.main | Starting Sage in development mode
+2026-07-12 17:07:32 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:07:44 | INFO     | app.main | GET /health -> 404
+2026-07-12 17:07:44 | INFO     | app.main | GET /favicon.ico -> 404
+2026-07-12 17:07:48 | INFO     | app.main | GET /health -> 404
+2026-07-12 17:07:51 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:07:52 | INFO     | app.main | GET /api/v1/health/db -> 200
+2026-07-12 17:07:59 | INFO     | app.main | GET /health -> 404
+2026-07-12 17:08:02 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:08:32 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:09:02 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:09:32 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:10:02 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:10:32 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:10:38 | INFO     | app.main | GET /api/v1/health -> 200
+2026-07-12 17:11:03 | INFO     | app.main | GET /api/v1/health -> 200

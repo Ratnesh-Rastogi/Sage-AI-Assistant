@@ -101,6 +101,9 @@ pip install -r requirements.txt
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
+Settings load `.env` from the repo root automatically, whether you run
+`uvicorn` from `backend/` (as above) or from the repo root — no need to
+copy or symlink it.
 
 **Frontend:**
 ```bash
@@ -108,12 +111,16 @@ cd frontend
 npm install
 npm run dev
 ```
+The dev server proxies `/api` to `http://localhost:8000`, so this works
+whether the backend above is a local `uvicorn` process or a Compose
+container (Compose publishes it to `localhost:8000` on the host either way).
 
 ## Testing
 
 ```bash
 cd backend && pytest         # backend unit tests
 cd frontend && npm test      # frontend unit tests
+cd frontend && npm run test:e2e   # e2e tests (requires the full stack running)
 ```
 
 See [`tests/README.md`](tests/README.md) for integration and e2e tests.
