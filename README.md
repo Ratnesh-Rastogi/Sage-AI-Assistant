@@ -7,11 +7,13 @@ assistance — all running locally, under the user's control.
 
 Full specification: [`docs/SAGE_BLUEPRINT.md`](docs/SAGE_BLUEPRINT.md).
 
-> **Status: Phase 1 — Foundation.** This repository currently contains the
-> repository structure, backend skeleton, frontend skeleton, PostgreSQL
-> integration, Docker configuration, environment configuration, and logging
-> system. The AI agent, memory, tools, and full chat UI arrive in later
-> phases per `docs/CLAUDE_BUILD_PROMPT.md`.
+> **Status: Phase 2 — AI Agent Core.** Foundation (Phase 1) plus the full
+> agent runtime are now in place: intent analysis, planning, tool registry +
+> execution, context building, multi-provider AI support, and conversation
+> persistence, all wired to a working `POST /chat` endpoint. Long-term
+> memory, productivity tools (notes/tasks/reminders), web search, scam
+> detection, file processing, email drafting, and the full chat UI arrive in
+> later phases per `docs/CLAUDE_BUILD_PROMPT.md`.
 
 ## Features (target, full Version 1)
 
@@ -25,15 +27,44 @@ Full specification: [`docs/SAGE_BLUEPRINT.md`](docs/SAGE_BLUEPRINT.md).
 - Daily briefings
 - Multi-provider AI support (Gemini, OpenAI, Claude, OpenRouter)
 
-## What's working right now (Phase 1)
+## What's working right now (Phase 1 + 2)
 
+**Phase 1 — Foundation:**
 - FastAPI backend that starts and serves `/api/v1/health` and `/api/v1/health/db`
 - React + TypeScript + Tailwind frontend shell that reports backend/database status
-- PostgreSQL via Docker Compose, with Alembic migrations (`users` table)
+- PostgreSQL via Docker Compose, with Alembic migrations
 - Structured logging with daily rotation
 - Environment-based configuration (no hardcoded secrets)
-- Unit tests for backend (pytest) and frontend (Vitest), plus integration and
-  e2e test scaffolding
+
+**Phase 2 — AI Agent Core:**
+- `POST /api/v1/chat` — send a message, get a response, with conversation
+  history persisted across turns
+- **Intent Analyzer** — classifies messages into one or more intents
+  (conversation, web search, note/task/reminder management, memory
+  operations, email drafting, scam detection, file analysis)
+- **Planner** — turns detected intent into an execution plan using the Tool
+  Registry's capability-based discovery (never hardcodes tool names)
+- **Execution Manager** — runs tool steps (parallel when independent),
+  logs every execution to the `tool_executions` table, and treats failures
+  as non-critical so one broken tool can't take down a response
+- **Tool Registry** — capability-based tool discovery; ships with one
+  reference tool (`system_time`) that proves the register → discover →
+  execute pipeline end to end
+- **Context Builder** — assembles the provider prompt from the current
+  message, tool outputs, relevant memory, and recent conversation history,
+  by priority
+- **Provider Interface** — one abstraction over four adapters (Gemini,
+  OpenAI, Claude, OpenRouter); switching providers is a config change, not a
+  code change
+- **Conversation Manager** — persists conversations and messages
+  (`conversations`, `messages`, `conversation_summaries` tables)
+- **Response Validator/Formatter** — rejects empty provider responses,
+  flags unbalanced markdown, and keeps the internal reasoning trace hidden
+  unless `debug: true` is requested
+- Memory retrieval has a stable interface (`MemoryManager.retrieve_relevant`)
+  that always returns `[]` for now — full persistence is Phase 3
+- Unit tests for backend (pytest) and frontend (Vitest), plus integration
+  and e2e test scaffolding
 
 ## Technology stack
 
@@ -43,7 +74,7 @@ Full specification: [`docs/SAGE_BLUEPRINT.md`](docs/SAGE_BLUEPRINT.md).
 | Frontend   | React, TypeScript, TailwindCSS, Vite     |
 | Database   | PostgreSQL 16, SQLAlchemy 2.x, Alembic   |
 | Scheduler  | APScheduler (from Phase 4)               |
-| AI         | Gemini / OpenAI / Claude / OpenRouter (from Phase 2) |
+| AI         | Gemini / OpenAI / Claude / OpenRouter — implemented in Phase 2 |
 | Search     | Tavily (from Phase 5)                    |
 | Deployment | Docker, Docker Compose                   |
 
@@ -53,16 +84,21 @@ Full specification: [`docs/SAGE_BLUEPRINT.md`](docs/SAGE_BLUEPRINT.md).
 git clone <this-repo>
 cd sage
 cp .env.example .env
-# edit .env with a real POSTGRES_PASSWORD and (later) provider API keys
+# edit .env with a real POSTGRES_PASSWORD, and at least one provider API key
+# (GEMINI_API_KEY, OPENAI_API_KEY, CLAUDE_API_KEY, or OPENROUTER_API_KEY)
 ```
 
 ## Configuration
 
 All configuration lives in `.env` (never committed — see `.env.example` for
-the full list of variables). At minimum for Phase 1 you need:
+the full list of variables). At minimum you need:
 
 - `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
 - `DATABASE_URL` (defaults to the values above, pointed at the `postgres` service)
+- `DEFAULT_AI_PROVIDER` (`gemini` | `openai` | `claude` | `openrouter`) and the
+  matching `*_API_KEY` — required to actually get a response from `/chat`;
+  everything else in the pipeline (intent analysis, planning, tool
+  execution, persistence) runs without one
 
 ## Running locally (Docker)
 
@@ -90,6 +126,8 @@ docker compose --profile with-redis up --build
 ```bash
 docker compose exec backend alembic upgrade head
 ```
+Runs both migrations: `0001` (users) and `0002` (conversations, messages,
+conversation_summaries, tool_executions).
 
 ## Running locally (without Docker)
 
@@ -133,9 +171,23 @@ See [`tests/README.md`](tests/README.md) for integration and e2e tests.
 - [`docs/API_DOCUMENTATION.md`](docs/API_DOCUMENTATION.md) — current API reference
 - [`docs/DEVELOPMENT_GUIDE.md`](docs/DEVELOPMENT_GUIDE.md) — how to extend Sage
 
-## Usage examples (future phases)
+## Usage examples
 
-Once later phases land, Sage will understand things like:
+**Works today**, via `POST /api/v1/chat`:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is polymorphism?"}'
+```
+
+The agent classifies intent, checks the Tool Registry, builds context from
+conversation history, calls your configured provider, and persists both
+messages — even for intents with no tool registered yet (e.g. "search for
+X" gets a real response plus an honest note that web search isn't wired up
+yet, rather than a fabricated answer).
+
+**Future phases** will add real handling for:
 
 ```
 "Remember that I prefer detailed explanations."

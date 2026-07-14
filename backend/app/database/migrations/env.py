@@ -11,6 +11,10 @@ from app.database.connection import Base
 
 # Import all models so they register on Base.metadata before autogenerate runs.
 from app.models import user  # noqa: F401
+from app.models import conversation  # noqa: F401
+from app.models import message  # noqa: F401
+from app.models import conversation_summary  # noqa: F401
+from app.models import tool_execution  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:
